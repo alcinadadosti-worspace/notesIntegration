@@ -1,4 +1,4 @@
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect } = React;
 
 const Upload = ({ className }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -58,8 +58,18 @@ const Trash2 = ({ className }) => (
   </svg>
 );
 
+const STORAGE_KEY = 'supervisionStock_items';
+
 const App = () => {
-  const [items, setItems] = useState([]);
+  // Carregar items do localStorage ao iniciar
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [expandedDocs, setExpandedDocs] = useState(new Set());
@@ -74,6 +84,15 @@ const App = () => {
   const [cleanedData, setCleanedData] = useState(null);
   const [viewMode, setViewMode] = useState('notes'); // 'notes' ou 'products'
 
+  // Salvar items no localStorage sempre que mudar
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch (error) {
+      console.error('Erro ao salvar no localStorage:', error);
+    }
+  }, [items]);
+
   const showNotification = (type, message) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 5000);
@@ -83,6 +102,12 @@ const App = () => {
     setItems([]);
     setExpandedDocs(new Set());
     setShowClearConfirm(false);
+    // Limpar também do localStorage
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Erro ao limpar localStorage:', error);
+    }
     showNotification('success', 'Dados limpos com sucesso!');
   };
 
