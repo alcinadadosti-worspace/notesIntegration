@@ -58,268 +58,194 @@ const Trash2 = ({ className }) => (
   </svg>
 );
 
-const STORAGE_KEY = 'supervisionStock_items';
+const LogOut = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1-2 2h4"></path>
+    <polyline points="16 17 21 12 16 7"></polyline>
+    <line x1="21" y1="12" x2="9" y2="12"></line>
+  </svg>
+);
 
-const App = () => {
-  // Carregar items do localStorage ao iniciar
-  const [items, setItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
+// Mapeamento de unidades
+const UNITS = {
+  // Codigos de acesso do usuario (visualizacao)
+  '13706': { name: 'VD Palmeira dos Indios', storageKey: 'supervisionStock_palmeira' },
+  '13707': { name: 'VD Penedo', storageKey: 'supervisionStock_penedo' },
+};
+
+const ADMIN_UNITS = {
+  // Codigos de acesso do admin (upload)
+  '1515': { name: 'VD Palmeira dos Indios', storageKey: 'supervisionStock_palmeira' },
+  '1048': { name: 'VD Penedo', storageKey: 'supervisionStock_penedo' },
+};
+
+// ==================== TELA DE LOGIN ====================
+const LoginScreen = ({ onLogin, onAdminClick }) => {
+  const [unitCode, setUnitCode] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    const unit = UNITS[unitCode.trim()];
+    if (unit) {
+      onLogin(unitCode.trim(), unit);
+    } else {
+      setError('Codigo de unidade invalido!');
+      setTimeout(() => setError(''), 3000);
     }
-  });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [expandedDocs, setExpandedDocs] = useState(new Set());
-  const [sortOrder, setSortOrder] = useState('desc');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-orange-50 flex items-center justify-center p-6 relative">
+      {/* Card Admin no canto */}
+      <button
+        onClick={onAdminClick}
+        className="absolute top-6 right-6 px-4 py-2 rounded-xl bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors text-sm flex items-center gap-2 font-light shadow-md"
+      >
+        <Settings className="w-4 h-4" />
+        Admin
+      </button>
+
+      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl p-10 max-w-md w-full border border-pink-100">
+        <div className="text-center mb-8">
+          <Package className="w-16 h-16 text-pink-400 mx-auto mb-4" />
+          <h1 className="text-3xl font-light text-pink-600 mb-2">Mercadorias</h1>
+          <p className="text-pink-400 font-light text-sm">Digite o codigo da sua unidade para acessar</p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-pink-600 mb-2 font-light">Codigo da Unidade</label>
+            <input
+              type="text"
+              value={unitCode}
+              onChange={(e) => setUnitCode(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full px-4 py-4 rounded-xl border border-pink-200 focus:border-pink-400 focus:outline-none bg-white/50 text-center text-2xl tracking-widest font-light"
+              placeholder="00000"
+              maxLength={5}
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+              <p className="text-red-500 text-sm font-light">{error}</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleLogin}
+            className="w-full px-4 py-4 rounded-xl bg-gradient-to-r from-pink-400 to-pink-500 text-white hover:from-pink-500 hover:to-pink-600 transition-all shadow-lg font-light text-lg"
+          >
+            Acessar
+          </button>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-pink-100">
+          <p className="text-pink-300 text-xs font-light text-center">Unidades disponiveis: Palmeira dos Indios e Penedo</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== TELA ADMIN LOGIN ====================
+const AdminLoginScreen = ({ onBack, onAdminLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    if (username === 'BOT' && password === '303040') {
+      onAdminLogin();
+    } else {
+      setError('Credenciais invalidas!');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 flex items-center justify-center p-6">
+      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl p-10 max-w-md w-full border border-purple-100">
+        <div className="text-center mb-8">
+          <Settings className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+          <h1 className="text-3xl font-light text-purple-600 mb-2">Area Administrativa</h1>
+          <p className="text-purple-400 font-light text-sm">Acesso restrito</p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-purple-600 mb-2 font-light">Usuario</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-purple-200 focus:border-purple-400 focus:outline-none bg-white/50 font-light"
+              placeholder="Digite o usuario"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-purple-600 mb-2 font-light">Senha</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full px-4 py-3 rounded-xl border border-purple-200 focus:border-purple-400 focus:outline-none bg-white/50 font-light"
+              placeholder="Digite a senha"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+              <p className="text-red-500 text-sm font-light">{error}</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleLogin}
+            className="w-full px-4 py-4 rounded-xl bg-gradient-to-r from-purple-400 to-purple-500 text-white hover:from-purple-500 hover:to-purple-600 transition-all shadow-lg font-light text-lg"
+          >
+            Entrar
+          </button>
+          <button
+            onClick={onBack}
+            className="w-full px-4 py-3 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors font-light"
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== PAINEL ADMIN ====================
+const AdminPanel = ({ onBack }) => {
+  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [unitCode, setUnitCode] = useState('');
+  const [error, setError] = useState('');
   const [notification, setNotification] = useState(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [adminUsername, setAdminUsername] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [csvData, setCsvData] = useState(null);
-  const [cleanedData, setCleanedData] = useState(null);
-  const [viewMode, setViewMode] = useState('notes'); // 'notes' ou 'products'
-
-  // Salvar items no localStorage sempre que mudar
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch (error) {
-      console.error('Erro ao salvar no localStorage:', error);
-    }
-  }, [items]);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 5000);
   };
 
-  const handleClearAll = () => {
-    setItems([]);
-    setExpandedDocs(new Set());
-    setShowClearConfirm(false);
-    // Limpar também do localStorage
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.error('Erro ao limpar localStorage:', error);
-    }
-    showNotification('success', 'Dados limpos com sucesso!');
-  };
-
-  const handleAdminLogin = () => {
-    if (adminUsername === 'acqua' && adminPassword === '13706') {
-      setShowAdminLogin(false);
-      setShowAdminPanel(true);
-      setAdminUsername('');
-      setAdminPassword('');
-      showNotification('success', 'Login administrativo realizado!');
+  const handleUnitSelect = () => {
+    const unit = ADMIN_UNITS[unitCode.trim()];
+    if (unit) {
+      setSelectedUnit({ code: unitCode.trim(), ...unit });
+      setError('');
     } else {
-      showNotification('error', 'Credenciais inválidas!');
+      setError('Codigo de unidade invalido!');
+      setTimeout(() => setError(''), 3000);
     }
-  };
-
-  const handleAdminFileUpload = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result;
-
-        let separator = ',';
-        const firstLine = text.split('\n')[0];
-        const semicolonCount = (firstLine.match(/;/g) || []).length;
-        const commaCount = (firstLine.match(/,/g) || []).length;
-        const tabCount = (firstLine.match(/\t/g) || []).length;
-
-        if (semicolonCount > commaCount && semicolonCount > tabCount) {
-          separator = ';';
-        } else if (tabCount > commaCount && tabCount > semicolonCount) {
-          separator = '\t';
-        }
-
-        const lines = text.split('\n').filter(line => line.trim());
-
-        if (lines.length < 2) {
-          showNotification('error', 'Arquivo CSV vazio ou inválido');
-          return;
-        }
-
-        const rawHeaders = lines[0].split(separator);
-        const headers = rawHeaders.map(h =>
-          h.trim()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^\w\s]/g, '')
-            .replace(/\s+/g, ' ')
-        );
-
-        const docIndex = headers.findIndex(h =>
-          h.includes('numero') && h.includes('documento')
-        );
-
-        let dateIndex = headers.findIndex(h =>
-          h.includes('data') && h.includes('entrada')
-        );
-        if (dateIndex === -1) {
-          dateIndex = headers.findIndex(h =>
-            h.includes('data') && h.includes('emissao')
-          );
-        }
-
-        const codeIndex = headers.findIndex(h =>
-          h.includes('codigo') && h.includes('produto')
-        );
-        const descIndex = headers.findIndex(h =>
-          h.includes('descri') && h.includes('produto')
-        );
-
-        let qtyIndex = headers.findIndex(h => {
-          const normalized = h.replace(/\s+/g, ' ').trim();
-          return normalized === 'quantidade de itens' || normalized === 'qtd de itens' || normalized === 'qtde de itens';
-        });
-
-        if (qtyIndex === -1) {
-          qtyIndex = headers.findIndex(h =>
-            h.includes('quantidade') && !h.includes('unidade')
-          );
-        }
-
-        if ([docIndex, dateIndex, codeIndex, descIndex, qtyIndex].some(i => i === -1)) {
-          const missing = [];
-          if (docIndex === -1) missing.push('Número do Documento');
-          if (dateIndex === -1) missing.push('Data de entrada/emissão');
-          if (codeIndex === -1) missing.push('Código do produto');
-          if (descIndex === -1) missing.push('Descrição Produto');
-          if (qtyIndex === -1) missing.push('Quantidade');
-
-          showNotification('error', `Colunas não encontradas: ${missing.join(', ')}`);
-          return;
-        }
-
-        // Criar CSV limpo com apenas as colunas necessárias
-        const cleanedLines = [];
-        cleanedLines.push('Numero Documento,Data entrada,Codigo Produto,Descricao Produto,Quantidade de itens');
-
-        for (let i = 1; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line) continue;
-
-          const values = line.split(separator).map(v => v.trim().replace(/^["']|["']$/g, ''));
-          if (values.length < 3) continue;
-
-          const cleanedRow = [
-            values[docIndex] || 'N/A',
-            values[dateIndex] || '',
-            values[codeIndex] || '',
-            values[descIndex] || '',
-            values[qtyIndex] || '0'
-          ].map(v => `"${v}"`).join(',');
-
-          cleanedLines.push(cleanedRow);
-        }
-
-        const cleanedCsv = cleanedLines.join('\n');
-        setCleanedData(cleanedCsv);
-        showNotification('success', `Arquivo processado! ${cleanedLines.length - 1} linhas encontradas.`);
-        event.target.value = '';
-      } catch (error) {
-        showNotification('error', 'Erro ao processar CSV: ' + error);
-      }
-    };
-
-    reader.onerror = () => {
-      showNotification('error', 'Erro ao ler o arquivo');
-    };
-
-    reader.readAsText(file, 'ISO-8859-1');
-  };
-
-  const downloadCleanedCSV = () => {
-    if (!cleanedData) return;
-
-    const blob = new Blob([cleanedData], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'mercadorias_limpo.csv');
-    link.style.visibility = 'hidden';
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    showNotification('success', 'CSV limpo baixado com sucesso!');
-  };
-
-  // Função para exportar todos os produtos para Excel
-  const exportAllProductsToExcel = () => {
-    if (filteredProducts.length === 0) {
-      showNotification('error', 'Nenhum produto para exportar');
-      return;
-    }
-
-    const data = filteredProducts.map(item => ({
-      'SKU': item.productCode,
-      'Produto': item.productDescription,
-      'Quantidade': item.quantity
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
-    XLSX.writeFile(wb, 'todos_produtos.xlsx');
-    showNotification('success', 'Excel exportado com sucesso!');
-  };
-
-  // Função para exportar todas as notas para Excel
-  const exportAllNotesToExcel = () => {
-    if (filteredItems.length === 0) {
-      showNotification('error', 'Nenhuma nota para exportar');
-      return;
-    }
-
-    const data = filteredItems.map(item => ({
-      'Nota Fiscal': item.documentNumber,
-      'Data': item.entryDate,
-      'SKU': item.productCode,
-      'Produto': item.productDescription,
-      'Quantidade': item.quantity
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Notas');
-    XLSX.writeFile(wb, 'todas_notas.xlsx');
-    showNotification('success', 'Excel exportado com sucesso!');
-  };
-
-  // Função para exportar uma nota específica para Excel
-  const exportSingleNoteToExcel = (docNumber, docItems) => {
-    const data = docItems.map(item => ({
-      'SKU': item.productCode,
-      'Produto': item.productDescription,
-      'Quantidade': item.quantity
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, `NF ${docNumber}`);
-    XLSX.writeFile(wb, `nota_${docNumber}.xlsx`);
-    showNotification('success', `Excel da NF ${docNumber} exportado!`);
   };
 
   const handleFileUpload = (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !selectedUnit) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -341,7 +267,7 @@ const App = () => {
         const lines = text.split('\n').filter(line => line.trim());
 
         if (lines.length < 2) {
-          showNotification('error', 'Arquivo CSV vazio ou inválido');
+          showNotification('error', 'Arquivo CSV vazio ou invalido');
           return;
         }
 
@@ -388,13 +314,13 @@ const App = () => {
 
         if ([docIndex, dateIndex, codeIndex, descIndex, qtyIndex].some(i => i === -1)) {
           const missing = [];
-          if (docIndex === -1) missing.push('Número do Documento');
-          if (dateIndex === -1) missing.push('Data de entrada/emissão');
-          if (codeIndex === -1) missing.push('Código do produto');
-          if (descIndex === -1) missing.push('Descrição Produto');
+          if (docIndex === -1) missing.push('Numero do Documento');
+          if (dateIndex === -1) missing.push('Data de entrada/emissao');
+          if (codeIndex === -1) missing.push('Codigo do produto');
+          if (descIndex === -1) missing.push('Descricao Produto');
           if (qtyIndex === -1) missing.push('Quantidade');
 
-          showNotification('error', `Colunas não encontradas: ${missing.join(', ')}`);
+          showNotification('error', `Colunas nao encontradas: ${missing.join(', ')}`);
           return;
         }
 
@@ -425,12 +351,20 @@ const App = () => {
         }
 
         if (newItems.length === 0) {
-          showNotification('error', 'Nenhum item válido encontrado no CSV');
+          showNotification('error', 'Nenhum item valido encontrado no CSV');
           return;
         }
 
-        setItems(prev => [...prev, ...newItems]);
-        showNotification('success', `${newItems.length} itens importados com sucesso!`);
+        // Salvar no localStorage da unidade selecionada
+        try {
+          const existing = JSON.parse(localStorage.getItem(selectedUnit.storageKey) || '[]');
+          const updated = [...existing, ...newItems];
+          localStorage.setItem(selectedUnit.storageKey, JSON.stringify(updated));
+        } catch (err) {
+          console.error('Erro ao salvar no localStorage:', err);
+        }
+
+        showNotification('success', `${newItems.length} itens importados para ${selectedUnit.name}!`);
         event.target.value = '';
       } catch (error) {
         showNotification('error', 'Erro ao processar CSV: ' + error);
@@ -444,13 +378,239 @@ const App = () => {
     reader.readAsText(file, 'ISO-8859-1');
   };
 
+  const handleClearUnit = () => {
+    if (!selectedUnit) return;
+    try {
+      localStorage.removeItem(selectedUnit.storageKey);
+    } catch (err) {
+      console.error('Erro ao limpar localStorage:', err);
+    }
+    setShowClearConfirm(false);
+    showNotification('success', `Dados de ${selectedUnit.name} limpos com sucesso!`);
+  };
+
+  const getUnitItemCount = () => {
+    if (!selectedUnit) return 0;
+    try {
+      const data = JSON.parse(localStorage.getItem(selectedUnit.storageKey) || '[]');
+      return data.length;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Tela de selecao de unidade
+  if (!selectedUnit) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 flex items-center justify-center p-6">
+        {notification && (
+          <div className={`fixed top-6 right-6 z-50 p-4 rounded-xl shadow-lg border-2 ${
+            notification.type === 'success'
+              ? 'bg-green-50 border-green-300 text-green-700'
+              : 'bg-red-50 border-red-300 text-red-700'
+          }`}>
+            <div className="flex items-center gap-3">
+              {notification.type === 'success' ? '✅' : '❌'}
+              <span className="font-light">{notification.message}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl p-10 max-w-md w-full border border-purple-100">
+          <div className="text-center mb-8">
+            <Settings className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+            <h1 className="text-3xl font-light text-purple-600 mb-2">Painel Admin</h1>
+            <p className="text-purple-400 font-light text-sm">Selecione a unidade para fazer upload</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-purple-600 mb-2 font-light">Codigo da Unidade</label>
+              <input
+                type="text"
+                value={unitCode}
+                onChange={(e) => setUnitCode(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleUnitSelect()}
+                className="w-full px-4 py-4 rounded-xl border border-purple-200 focus:border-purple-400 focus:outline-none bg-white/50 text-center text-2xl tracking-widest font-light"
+                placeholder="0000"
+                maxLength={4}
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+                <p className="text-red-500 text-sm font-light">{error}</p>
+              </div>
+            )}
+
+            <button
+              onClick={handleUnitSelect}
+              className="w-full px-4 py-4 rounded-xl bg-gradient-to-r from-purple-400 to-purple-500 text-white hover:from-purple-500 hover:to-purple-600 transition-all shadow-lg font-light text-lg"
+            >
+              Selecionar Unidade
+            </button>
+            <button
+              onClick={onBack}
+              className="w-full px-4 py-3 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors font-light"
+            >
+              Voltar ao Inicio
+            </button>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-purple-100">
+            <p className="text-purple-300 text-xs font-light text-center">1515 - Palmeira dos Indios | 1048 - Penedo</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tela de upload da unidade selecionada
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 p-6">
+      {notification && (
+        <div className={`fixed top-6 right-6 z-50 p-4 rounded-xl shadow-lg border-2 ${
+          notification.type === 'success'
+            ? 'bg-green-50 border-green-300 text-green-700'
+            : 'bg-red-50 border-red-300 text-red-700'
+        }`}>
+          <div className="flex items-center gap-3">
+            {notification.type === 'success' ? '✅' : '❌'}
+            <span className="font-light">{notification.message}</span>
+          </div>
+        </div>
+      )}
+
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{zIndex: 99999}}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full border-2 border-red-200">
+            <h3 className="text-xl font-light text-red-600 mb-3">Confirmar Limpeza</h3>
+            <p className="text-red-500 mb-6 font-light">
+              Tem certeza que deseja limpar todos os dados de <strong>{selectedUnit.name}</strong>? Esta acao nao pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors font-light"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleClearUnit}
+                className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors font-light"
+              >
+                Sim, Limpar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-light text-purple-600">Painel Admin</h1>
+            <p className="text-purple-400 font-light text-sm mt-1">{selectedUnit.name}</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setSelectedUnit(null)}
+              className="px-4 py-2 rounded-xl bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors text-sm font-light"
+            >
+              Trocar Unidade
+            </button>
+            <button
+              onClick={onBack}
+              className="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors text-sm font-light"
+            >
+              Sair
+            </button>
+          </div>
+        </div>
+
+        {/* Info da unidade */}
+        <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-400 text-sm font-light">Itens cadastrados nesta unidade</p>
+              <p className="text-3xl font-light text-purple-600 mt-1">{getUnitItemCount()}</p>
+            </div>
+            <Package className="w-12 h-12 text-purple-300" />
+          </div>
+        </div>
+
+        {/* Upload */}
+        <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 mb-6">
+          <h2 className="text-xl font-light text-purple-600 mb-4">Upload de Mercadorias</h2>
+          <p className="text-purple-400 text-sm font-light mb-4">
+            Selecione o arquivo CSV com as mercadorias que chegaram em <strong>{selectedUnit.name}</strong>.
+          </p>
+          <label className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-400 to-purple-500 text-white px-6 py-4 rounded-xl cursor-pointer hover:from-purple-500 hover:to-purple-600 transition-all shadow-lg">
+            <Upload className="w-5 h-5" />
+            <span className="font-light text-lg">Selecionar Arquivo CSV</span>
+            <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+          </label>
+        </div>
+
+        {/* Limpar dados */}
+        <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-red-100">
+          <h2 className="text-xl font-light text-red-500 mb-4">Zona de Perigo</h2>
+          <p className="text-red-400 text-sm font-light mb-4">
+            Limpar todos os dados de mercadorias de {selectedUnit.name}.
+          </p>
+          <button
+            onClick={() => setShowClearConfirm(true)}
+            className="flex items-center justify-center gap-2 bg-red-100 text-red-600 px-6 py-3 rounded-xl hover:bg-red-200 transition-colors font-light"
+          >
+            <Trash2 className="w-4 h-4" />
+            Limpar Dados da Unidade
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== TELA PRINCIPAL (VISUALIZACAO) ====================
+const MainView = ({ unitCode, unitInfo, onLogout }) => {
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem(unitInfo.storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [expandedDocs, setExpandedDocs] = useState(new Set());
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [notification, setNotification] = useState(null);
+  const [viewMode, setViewMode] = useState('notes');
+
+  // Recarregar dados do localStorage periodicamente (caso admin atualize)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      try {
+        const saved = localStorage.getItem(unitInfo.storageKey);
+        const parsed = saved ? JSON.parse(saved) : [];
+        setItems(parsed);
+      } catch {}
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [unitInfo.storageKey]);
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
   const filteredItems = useMemo(() => {
     let filtered = items.filter(item => {
       const matchesSearch = searchTerm === '' ||
         item.documentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.productCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.productDescription.toLowerCase().includes(searchTerm.toLowerCase());
-
       return matchesSearch;
     });
 
@@ -473,7 +633,6 @@ const App = () => {
     return groups;
   }, [filteredItems]);
 
-  // Filtrar produtos para a aba "Todos os Produtos"
   const filteredProducts = useMemo(() => {
     let filtered = items.filter(item => {
       const matchesSearch = productSearchTerm === '' ||
@@ -493,7 +652,6 @@ const App = () => {
   const stats = useMemo(() => {
     const totalItems = filteredItems.reduce((sum, item) => sum + item.quantity, 0);
     const uniqueDocs = groupedByDocument.size;
-
     return { totalItems, uniqueDocs };
   }, [filteredItems, groupedByDocument]);
 
@@ -509,148 +667,58 @@ const App = () => {
     });
   };
 
+  const exportAllProductsToExcel = () => {
+    if (filteredProducts.length === 0) {
+      showNotification('error', 'Nenhum produto para exportar');
+      return;
+    }
+    const data = filteredProducts.map(item => ({
+      'SKU': item.productCode,
+      'Produto': item.productDescription,
+      'Quantidade': item.quantity
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
+    XLSX.writeFile(wb, 'todos_produtos.xlsx');
+    showNotification('success', 'Excel exportado com sucesso!');
+  };
+
+  const exportAllNotesToExcel = () => {
+    if (filteredItems.length === 0) {
+      showNotification('error', 'Nenhuma nota para exportar');
+      return;
+    }
+    const data = filteredItems.map(item => ({
+      'Nota Fiscal': item.documentNumber,
+      'Data': item.entryDate,
+      'SKU': item.productCode,
+      'Produto': item.productDescription,
+      'Quantidade': item.quantity
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Notas');
+    XLSX.writeFile(wb, 'todas_notas.xlsx');
+    showNotification('success', 'Excel exportado com sucesso!');
+  };
+
+  const exportSingleNoteToExcel = (docNumber, docItems) => {
+    const data = docItems.map(item => ({
+      'SKU': item.productCode,
+      'Produto': item.productDescription,
+      'Quantidade': item.quantity
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `NF ${docNumber}`);
+    XLSX.writeFile(wb, `nota_${docNumber}.xlsx`);
+    showNotification('success', `Excel da NF ${docNumber} exportado!`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-orange-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {showAdminLogin && (
-          <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
-            style={{zIndex: 99999}}
-          >
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full border-2 border-purple-200">
-              <h3 className="text-xl font-light text-purple-600 mb-3">Acesso Administrativo</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-purple-600 mb-2 font-light">Usuário</label>
-                  <input
-                    type="text"
-                    value={adminUsername}
-                    onChange={(e) => setAdminUsername(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-purple-200 focus:border-purple-400 focus:outline-none bg-white/50"
-                    placeholder="Digite o usuário"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-purple-600 mb-2 font-light">Senha</label>
-                  <input
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-                    className="w-full px-4 py-3 rounded-xl border border-purple-200 focus:border-purple-400 focus:outline-none bg-white/50"
-                    placeholder="Digite a senha"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowAdminLogin(false);
-                    setAdminUsername('');
-                    setAdminPassword('');
-                  }}
-                  className="flex-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors font-light"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleAdminLogin}
-                  className="flex-1 px-4 py-3 rounded-xl bg-purple-500 text-white hover:bg-purple-600 transition-colors font-light"
-                >
-                  Entrar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showAdminPanel && (
-          <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
-            style={{zIndex: 99999}}
-          >
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-2xl w-full border-2 border-purple-200">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-light text-purple-600">Painel Administrativo</h3>
-                <button
-                  onClick={() => {
-                    setShowAdminPanel(false);
-                    setCleanedData(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="bg-purple-50 rounded-xl p-4 mb-6">
-                <p className="text-purple-600 text-sm font-light">
-                  Esta ferramenta permite processar arquivos CSV e extrair apenas as colunas necessárias para importação na aplicação principal.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-purple-600 mb-2 font-light">Upload de CSV para Limpeza</label>
-                  <label className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-400 to-purple-500 text-white px-4 py-3 rounded-xl cursor-pointer hover:from-purple-500 hover:to-purple-600 transition-all shadow-md">
-                    <Upload className="w-4 h-4" />
-                    <span className="text-sm font-light">Selecionar Arquivo CSV</span>
-                    <input type="file" accept=".csv" onChange={handleAdminFileUpload} className="hidden" />
-                  </label>
-                </div>
-
-                {cleanedData && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-green-700 font-light">✓ Arquivo processado com sucesso!</p>
-                        <p className="text-green-600 text-sm mt-1">
-                          Colunas extraídas: Número do Documento, Data de entrada, Código do produto, Descrição Produto, Quantidade de itens
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={downloadCleanedCSV}
-                      className="mt-4 w-full flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-3 rounded-xl hover:bg-green-600 transition-colors font-light"
-                    >
-                      <Download className="w-4 h-4" />
-                      Baixar CSV Limpo
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showClearConfirm && (
-          <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
-            style={{zIndex: 99999}}
-          >
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full border-2 border-pink-200">
-              <h3 className="text-xl font-light text-pink-600 mb-3">Confirmar Limpeza</h3>
-              <p className="text-pink-500 mb-6 font-light">
-                Tem certeza que deseja limpar todos os dados importados? Esta ação não pode ser desfeita.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowClearConfirm(false)}
-                  className="flex-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors font-light"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleClearAll}
-                  className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors font-light"
-                >
-                  Sim, Limpar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {notification && (
           <div className={`fixed top-6 right-6 z-50 p-4 rounded-xl shadow-lg border-2 ${
             notification.type === 'success'
@@ -664,8 +732,18 @@ const App = () => {
           </div>
         )}
 
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-light text-pink-600 mb-2">Visualização de Mercadorias</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-light text-pink-600 mb-1">Mercadorias</h1>
+            <p className="text-pink-400 font-light text-sm">{unitInfo.name}</p>
+          </div>
+          <button
+            onClick={onLogout}
+            className="px-4 py-2 rounded-xl bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors text-sm flex items-center gap-2 font-light"
+          >
+            <LogOut className="w-4 h-4" />
+            Sair
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -691,25 +769,16 @@ const App = () => {
         </div>
 
         <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-pink-100 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm text-pink-600 mb-2 font-light">Importar CSV</label>
-              <label className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-400 to-pink-500 text-white px-4 py-3 rounded-xl cursor-pointer hover:from-pink-500 hover:to-pink-600 transition-all shadow-md">
-                <Upload className="w-4 h-4" />
-                <span className="text-sm font-light">Upload</span>
-                <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
-              </label>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-pink-600 mb-2 font-light">
-                {viewMode === 'notes' ? 'Buscar (NF, código ou produto)' : 'Buscar (SKU ou produto)'}
+                {viewMode === 'notes' ? 'Buscar (NF, codigo ou produto)' : 'Buscar (SKU ou produto)'}
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-300" />
                 <input
                   type="text"
-                  placeholder={viewMode === 'notes' ? "NF, código ou produto..." : "SKU ou nome do produto..."}
+                  placeholder={viewMode === 'notes' ? "NF, codigo ou produto..." : "SKU ou nome do produto..."}
                   value={viewMode === 'notes' ? searchTerm : productSearchTerm}
                   onChange={(e) => viewMode === 'notes' ? setSearchTerm(e.target.value) : setProductSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-pink-200 focus:border-pink-400 focus:outline-none bg-white/50 text-sm"
@@ -718,7 +787,7 @@ const App = () => {
             </div>
 
             <div>
-              <label className="block text-sm text-pink-600 mb-2 font-light">Ordenação por Quantidade</label>
+              <label className="block text-sm text-pink-600 mb-2 font-light">Ordenacao por Quantidade</label>
               <button
                 onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                 className="w-full px-4 py-3 rounded-xl bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors text-sm font-light"
@@ -728,15 +797,8 @@ const App = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-pink-100">
-            <button
-              onClick={() => setShowAdminLogin(true)}
-              className="px-4 py-2 rounded-xl bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors text-sm flex items-center gap-2 font-light"
-            >
-              <Settings className="w-4 h-4" />
-              Administrativo
-            </button>
-            {items.length > 0 && (
+          {items.length > 0 && (
+            <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-pink-100">
               <button
                 onClick={viewMode === 'notes' ? exportAllNotesToExcel : exportAllProductsToExcel}
                 className="px-4 py-2 rounded-xl bg-green-100 text-green-600 hover:bg-green-200 transition-colors text-sm flex items-center gap-2 font-light"
@@ -744,18 +806,11 @@ const App = () => {
                 <Download className="w-4 h-4" />
                 Exportar Excel
               </button>
-            )}
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              className="px-4 py-2 rounded-xl bg-red-100 text-red-600 hover:bg-red-200 transition-colors text-sm flex items-center gap-2 ml-auto font-light"
-            >
-              <Trash2 className="w-4 h-4" />
-              Limpar Tudo
-            </button>
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Abas de navegação */}
+        {/* Abas de navegacao */}
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setViewMode('notes')}
@@ -787,21 +842,18 @@ const App = () => {
 
         {items.length === 0 ? (
           <div className="bg-white/80 backdrop-blur rounded-2xl p-12 text-center shadow-lg border border-pink-100">
-            <Upload className="w-16 h-16 text-pink-300 mx-auto mb-4" />
-            <p className="text-pink-400 font-light text-lg">Nenhuma mercadoria importada ainda</p>
-            <p className="text-pink-300 text-sm mt-2">Faça upload de um arquivo CSV para começar</p>
+            <Package className="w-16 h-16 text-pink-300 mx-auto mb-4" />
+            <p className="text-pink-400 font-light text-lg">Nenhuma mercadoria disponivel</p>
+            <p className="text-pink-300 text-sm mt-2">As mercadorias serao carregadas pelo administrador</p>
           </div>
         ) : viewMode === 'products' ? (
-          /* Visualização: Todos os Produtos */
           <div className="bg-white/80 backdrop-blur rounded-2xl shadow-lg border border-pink-100 overflow-hidden">
             <div className="p-4 bg-pink-50/50 border-b border-pink-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-pink-500" />
-                  <span className="text-pink-600 font-light">
-                    {filteredProducts.length} produto(s) encontrado(s)
-                  </span>
-                </div>
+              <div className="flex items-center gap-3">
+                <Package className="w-5 h-5 text-pink-500" />
+                <span className="text-pink-600 font-light">
+                  {filteredProducts.length} produto(s) encontrado(s)
+                </span>
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -835,7 +887,6 @@ const App = () => {
             )}
           </div>
         ) : (
-          /* Visualização: Por Notas */
           <div className="space-y-4">
             {Array.from(groupedByDocument.entries()).map(([docNumber, docItems]) => {
               const isExpanded = expandedDocs.has(docNumber);
@@ -844,9 +895,7 @@ const App = () => {
 
               return (
                 <div key={docNumber} className="bg-white/80 backdrop-blur rounded-2xl shadow-lg border border-pink-100 overflow-hidden">
-                  <div
-                    className="p-5 cursor-pointer hover:bg-pink-50/50 transition-colors flex items-center justify-between"
-                  >
+                  <div className="p-5 cursor-pointer hover:bg-pink-50/50 transition-colors flex items-center justify-between">
                     <div
                       className="flex items-center gap-4 flex-1"
                       onClick={() => toggleDocument(docNumber)}
@@ -907,6 +956,60 @@ const App = () => {
       </div>
     </div>
   );
+};
+
+// ==================== APP PRINCIPAL (ROTEAMENTO) ====================
+const App = () => {
+  const [screen, setScreen] = useState('login'); // 'login', 'adminLogin', 'admin', 'main'
+  const [currentUnit, setCurrentUnit] = useState(null);
+
+  const handleUserLogin = (code, unit) => {
+    setCurrentUnit({ code, ...unit });
+    setScreen('main');
+  };
+
+  const handleLogout = () => {
+    setCurrentUnit(null);
+    setScreen('login');
+  };
+
+  const handleAdminLogin = () => {
+    setScreen('admin');
+  };
+
+  if (screen === 'login') {
+    return (
+      <LoginScreen
+        onLogin={handleUserLogin}
+        onAdminClick={() => setScreen('adminLogin')}
+      />
+    );
+  }
+
+  if (screen === 'adminLogin') {
+    return (
+      <AdminLoginScreen
+        onBack={() => setScreen('login')}
+        onAdminLogin={handleAdminLogin}
+      />
+    );
+  }
+
+  if (screen === 'admin') {
+    return <AdminPanel onBack={() => setScreen('login')} />;
+  }
+
+  if (screen === 'main' && currentUnit) {
+    return (
+      <MainView
+        unitCode={currentUnit.code}
+        unitInfo={currentUnit}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  return null;
 };
 
 ReactDOM.render(<App />, document.getElementById('root'));
